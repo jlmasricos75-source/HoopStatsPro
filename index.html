@@ -116,6 +116,10 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;}
 .badge-g{background:rgba(34,197,94,.15);color:#86EFAC;}
 .badge-r{background:rgba(239,68,68,.13);color:#FCA5A5;}
+.badge-p{background:rgba(100,116,139,.18);color:#CBD5E1;}
+.badge-l{background:rgba(59,130,246,.18);color:#93C5FD;}
+.badge-v{background:rgba(251,146,60,.16);color:#FDBA74;}
+.badge-f{background:rgba(34,197,94,.15);color:#86EFAC;}
 .wr{display:flex;align-items:center;gap:6px;padding:4px 0;}
 .wr input[type=range]{flex:1;}
 .wv{min-width:28px;text-align:right;color:var(--c1);font-size:11px;font-weight:600;}
@@ -227,7 +231,10 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
     </div>
     <div style="font-size:9px;color:var(--mu);margin-bottom:3px">Notas pre-partido</div>
     <textarea class="inp" id="ng-notes" placeholder="Objetivos, plan táctico..." style="height:55px;resize:none;margin-bottom:12px"></textarea>
-    <button class="btn-p" style="width:100%;font-size:14px" onclick="iniciarPartido()">🏀 Iniciar Partido</button>
+    <div style="display:flex;gap:6px">
+      <button class="btn-s" style="flex:1;font-size:13px" onclick="savePendingGame()">🗂 Guardar pendiente</button>
+      <button class="btn-p" style="flex:1;font-size:14px" onclick="iniciarPartido()">🏀 Iniciar Partido</button>
+    </div>
   </div>
   <div class="card" id="home-recientes">
     <div class="ct">Últimos partidos</div>
@@ -700,7 +707,8 @@ var S = {
   },
   game: {
     id: Date.now(), date: new Date().toLocaleDateString('es-ES'),
-    myTeamKey: 'A', rival: 'Rival', lv: 'L', notes: '', convoc: []
+    myTeamKey: 'A', rival: 'Rival', lv: 'L', notes: '', convoc: [],
+    status: 'pending', source: 'manual', versionOf: null
   },
   teams: {
     A: { name:'Mi Equipo', players:[], goals:{}, onCourt:[] },
@@ -813,7 +821,10 @@ function iniciarPartido() {
     rival: rival,
     lv: S.game.lv,
     notes: document.getElementById('ng-notes').value,
-    convoc: S.game.convoc
+    convoc: S.game.convoc,
+    status: 'live',
+    source: 'live',
+    versionOf: null
   };
   S.teams.A = { name:myT.name, players:JSON.parse(JSON.stringify(convocPlayers)), goals:myT.goals||{}, onCourt:[] };
   S.teams.B = { name:rival,    players:JSON.parse(JSON.stringify(rivalPlayers)),  goals:{},             onCourt:[] };
@@ -833,6 +844,55 @@ function iniciarPartido() {
   sv('live', document.querySelectorAll('.nb')[1]);
   if(sessionId) setTimeout(pushSession,200);
 }
+function savePendingGame() {
+  var k = document.getElementById('ng-myteam').value;
+  var rival = document.getElementById('ng-rival').value.trim();
+  if(!k){ showToast('Selecciona tu equipo'); return; }
+  if(!rival){ showToast('Escribe el nombre del rival'); return; }
+  var myT = S.myTeams[k];
+  var convocPlayers = k==='A' ?
+    myT.players.filter(function(p){ return S.game.convoc.indexOf(p.id)>=0 || !S.game.convoc.length; }) :
+    myT.players;
+  var pendingGame = {
+    id: Date.now(),
+    date: document.getElementById('ng-fecha').value || new Date().toLocaleDateString('es-ES'),
+    time: document.getElementById('ng-hora').value || '',
+    myTeamKey: k,
+    rival: rival,
+    lv: S.game.lv,
+    notes: document.getElementById('ng-notes').value,
+    convoc: S.game.convoc.slice(),
+    status: 'pending',
+    source: 'manual',
+    versionOf: null
+  };
+  var d = {
+    id: pendingGame.id,
+    date: pendingGame.date,
+    nameA: myT.name,
+    nameB: rival,
+    scA: 0,
+    scB: 0,
+    teams: {
+      A: { name: myT.name, players: JSON.parse(JSON.stringify(convocPlayers)), goals: myT.goals||{}, onCourt: [] },
+      B: { name: rival, players: JSON.parse(JSON.stringify(rivalPlayers)), goals: {}, onCourt: [] }
+    },
+    actions: [],
+    q: 1,
+    game: pendingGame,
+    status: 'pending',
+    source: 'manual',
+    versionOf: null
+  };
+  try{ hsMirrorGame(d); }catch(e){}
+  if(db){
+    hsPushRemoteGame(d,function(ok){ showToast(ok?'Pendiente guardado ✓':'Pendiente local ✓'); hsRefreshViews(); });
+  }else{
+    showToast('Pendiente guardado ✓');
+    hsRefreshViews();
+  }
+}
+
 function rHomeRecentes() {
   var el = document.getElementById('home-rec-list');
   try{
@@ -1540,7 +1600,7 @@ function hsMirrorGame(d){
   try{
     localStorage.setItem('hs-game:'+d.id,JSON.stringify(d));
     var list=JSON.parse(localStorage.getItem('hs-list')||'[]');
-    var s={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB};
+    var s={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB,status:getGameStatus(d),source:getGameSource(d),versionOf:getGameVersionOf(d)};
     var i=list.findIndex(function(g){return String(g.id)===String(d.id);});
     if(i>=0) list[i]=s; else list.push(s);
     localStorage.setItem('hs-list',JSON.stringify(list));
@@ -1580,7 +1640,7 @@ function hsFetchRemote(cb){
 }
 function hsPushRemoteGame(d, done){
   if(!db){ done&&done(false); return; }
-  var summary={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB};
+  var summary={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB,status:getGameStatus(d),source:getGameSource(d),versionOf:getGameVersionOf(d)};
   Promise.all([
     db.ref(hsGamePath(d.id)).set(d),
     db.ref(hsListPath()+'/'+d.id).set(summary)
@@ -1682,21 +1742,122 @@ function rTempRec(){
 // ════════════════════════════════════════════════════════════
 // HISTORIAL
 // ════════════════════════════════════════════════════════════
+function getGameStatus(d){
+  return (d && (d.status || (d.game && d.game.status))) || 'final';
+}
+function setGameStatusData(d, status){
+  if(!d) return d;
+  d.status = status;
+  d.game = d.game || {};
+  d.game.status = status;
+  if(status==='live' && !d.source) d.source='live';
+  if(d.game && status==='live' && !d.game.source) d.game.source='live';
+  return d;
+}
+function getGameSource(d){
+  return (d && (d.source || (d.game && d.game.source))) || 'manual';
+}
+function getGameVersionOf(d){
+  return (d && (d.versionOf || (d.game && d.game.versionOf))) || null;
+}
+function gameStatusLabel(st){
+  return {pending:'PENDIENTE',live:'LIVE',review:'VÍDEO',final:'FINAL'}[st] || 'FINAL';
+}
+function gameStatusBadgeClass(st){
+  return {pending:'badge-p',live:'badge-l',review:'badge-v',final:'badge-f'}[st] || 'badge-f';
+}
+function groupTitle(st){
+  return {pending:'Pendientes',live:'En directo',review:'Revisión vídeo',final:'Historial final'}[st] || 'Partidos';
+}
+function hsUpdateGameStatus(id, status){
+  var apply = function(d){
+    if(!d) return;
+    setGameStatusData(d, status);
+    hsMirrorGame(d);
+    if(db){ hsPushRemoteGame(d,function(){ hsRefreshViews(); showToast('Estado: '+gameStatusLabel(status)); }); }
+    else { hsRefreshViews(); showToast('Estado: '+gameStatusLabel(status)); }
+  };
+  try{
+    var d=JSON.parse(localStorage.getItem('hs-game:'+id));
+    if(d){ apply(d); return; }
+  }catch(e){}
+  if(db){
+    db.ref(hsGamePath(id)).once('value').then(function(snap){
+      var d=snap.val();
+      if(d) apply(d); else showToast('No encontrado');
+    }).catch(function(){ showToast('Error al cambiar estado'); });
+  }
+}
+function hsDuplicateToReview(id){
+  var duplicate = function(d){
+    if(!d){ showToast('No encontrado'); return; }
+    var copy = JSON.parse(JSON.stringify(d));
+    copy.id = Date.now();
+    copy.status = 'review';
+    copy.source = 'video';
+    copy.versionOf = d.id;
+    copy.game = copy.game || {};
+    copy.game.id = copy.id;
+    copy.game.status = 'review';
+    copy.game.source = 'video';
+    copy.game.versionOf = d.id;
+    hsMirrorGame(copy);
+    if(db){ hsPushRemoteGame(copy,function(){ hsRefreshViews(); showToast('Revisión creada ✓'); }); }
+    else { hsRefreshViews(); showToast('Revisión creada ✓'); }
+  };
+  try{
+    var d=JSON.parse(localStorage.getItem('hs-game:'+id));
+    if(d){ duplicate(d); return; }
+  }catch(e){}
+  if(db){
+    db.ref(hsGamePath(id)).once('value').then(function(snap){ duplicate(snap.val()); }).catch(function(){ showToast('Error al duplicar'); });
+  }
+}
 function rHistorial(){
   var el=document.getElementById('hist-list');
   try{
     var list=JSON.parse(localStorage.getItem('hs-list')||'[]');
     if(!list.length){el.innerHTML='<div class="empty">Sin partidos guardados</div>';return;}
-    el.innerHTML=list.slice().sort(function(a,b){return Number(b.id)-Number(a.id);}).map(function(g){
-      return '<div class="hg" onclick="loadGame(\''+g.id+'\')">'
-        +'<div style="flex:1"><div style="font-size:10px;color:var(--mu)">'+g.date+' — '+g.nameA+'</div><div style="font-size:12px;font-weight:500">vs '+g.nameB+'</div></div>'
-        +'<span class="badge '+(g.scA>g.scB?'badge-g':'badge-r')+'">'+g.scA+' — '+g.scB+'</span>'
-        +'<button class="btn-r" style="font-size:10px;padding:2px 7px;margin-left:6px" onclick="delG(event,\''+g.id+'\')">🗑</button></div>';
-    }).join('');
+    list=list.slice().sort(function(a,b){return Number(b.id)-Number(a.id);});
+    var groups={pending:[],live:[],review:[],final:[]};
+    list.forEach(function(g){
+      var st=getGameStatus(g);
+      if(!groups[st]) st='final';
+      groups[st].push(g);
+    });
+    var order=['pending','live','review','final'];
+    var html='';
+    order.forEach(function(st){
+      var items=groups[st];
+      if(!items.length) return;
+      html+='<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--mu);text-transform:uppercase;margin:10px 0 6px">'+groupTitle(st)+'</div>';
+      html+=items.map(function(g){
+        var status = getGameStatus(g);
+        var actions = '';
+        if(status==='pending'){
+          actions += '<button class="btn-s" style="font-size:10px;padding:2px 7px;margin-left:6px" onclick="event.stopPropagation();hsUpdateGameStatus(\''+g.id+'\',\'live\')">▶ Live</button>';
+          actions += '<button class="btn-s" style="font-size:10px;padding:2px 7px;margin-left:4px;color:#FDBA74" onclick="event.stopPropagation();hsUpdateGameStatus(\''+g.id+'\',\'review\')">🎬 Vídeo</button>';
+        } else if(status==='live'){
+          actions += '<button class="btn-s" style="font-size:10px;padding:2px 7px;margin-left:6px;color:#FDBA74" onclick="event.stopPropagation();hsDuplicateToReview(\''+g.id+'\')">Duplicar revisión</button>';
+        } else if(status==='review'){
+          actions += '<button class="btn-s" style="font-size:10px;padding:2px 7px;margin-left:6px;color:#86EFAC" onclick="event.stopPropagation();hsUpdateGameStatus(\''+g.id+'\',\'final\')">✓ Final</button>';
+        }
+        actions += '<button class="btn-r" style="font-size:10px;padding:2px 7px;margin-left:6px" onclick="delG(event,\''+g.id+'\')">🗑</button>';
+        return '<div class="hg" onclick="loadGame(\''+g.id+'\')">'
+          +'<div style="flex:1"><div style="font-size:10px;color:var(--mu)">'+g.date+' — '+g.nameA+'</div><div style="font-size:12px;font-weight:500">vs '+g.nameB+'</div></div>'
+          +'<span class="badge '+gameStatusBadgeClass(status)+'" style="margin-right:6px">'+gameStatusLabel(status)+'</span>'
+          +'<span class="badge '+(g.scA>g.scB?'badge-g':'badge-r')+'">'+g.scA+' — '+g.scB+'</span>'
+          +actions+'</div>';
+      }).join('');
+    });
+    el.innerHTML=html || '<div class="empty">Sin partidos guardados</div>';
   }catch(e){el.innerHTML='<div class="empty">Sin partidos guardados</div>';}
 }
 function saveGame(){
-  var d={id:S.game.id||Date.now(),date:S.game.date,nameA:S.teams.A.name,nameB:S.teams.B.name,scA:parseInt(document.getElementById('scA').textContent||'0'),scB:parseInt(document.getElementById('scB').textContent||'0'),teams:JSON.parse(JSON.stringify(S.teams)),actions:S.actions,q:S.q,game:S.game};
+  var gmeta = JSON.parse(JSON.stringify(S.game||{}));
+  if(!gmeta.status) gmeta.status='live';
+  if(!gmeta.source) gmeta.source='live';
+  var d={id:gmeta.id||Date.now(),date:gmeta.date||S.game.date,nameA:S.teams.A.name,nameB:S.teams.B.name,scA:parseInt(document.getElementById('scA').textContent||'0'),scB:parseInt(document.getElementById('scB').textContent||'0'),teams:JSON.parse(JSON.stringify(S.teams)),actions:S.actions,q:S.q,game:gmeta,status:gmeta.status,source:gmeta.source,versionOf:gmeta.versionOf||null};
   try{ hsMirrorGame(d); }catch(e){}
   if(db){
     hsPushRemoteGame(d,function(ok){ showToast(ok?'Guardado ✓':'Guardado local ✓'); hsRefreshViews(); });
@@ -1709,6 +1870,11 @@ function hsApplyLoadedGame(d){
   if(!d) throw new Error('no-data');
   S.teams=d.teams; S.actions=d.actions||[]; S.q=d.q||1;
   if(d.game)S.game=d.game;
+  S.game = S.game || {};
+  S.game.status = getGameStatus(d);
+  S.game.source = getGameSource(d);
+  S.game.versionOf = getGameVersionOf(d);
+  S.game.id = d.id;
   document.getElementById('scA').textContent=d.scA||0;
   document.getElementById('scB').textContent=d.scB||0;
   document.getElementById('snA').textContent=d.nameA||S.teams.A.name;
