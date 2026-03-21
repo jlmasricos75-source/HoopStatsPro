@@ -223,6 +223,11 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
       <input class="inp" id="ng-rn" placeholder="Nombre" style="flex:1;margin:0">
       <button class="btn-p" onclick="addRival()">+</button>
     </div>
+    <textarea class="inp" id="ng-rival-roster" placeholder="#2&#10;ANTONIO BARCELO MARTIN&#10;#3&#10;EDUARD ABEL BAYARRI JAVIER" style="height:92px;resize:vertical;margin-bottom:5px"></textarea>
+    <div style="display:flex;gap:5px;margin-bottom:5px">
+      <button class="btn-s" style="flex:1" onclick="importRivalRoster()">Importar roster FBCV</button>
+      <button class="btn-s" onclick="document.getElementById('ng-rival-roster').value=''">Limpiar</button>
+    </div>
     <div id="rival-tags" style="margin-bottom:8px"></div>
     <div style="font-size:9px;color:var(--mu);margin-bottom:5px">Local / Visitante</div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
@@ -790,6 +795,45 @@ function setLV(v) {
   document.getElementById('btn-vis').className = v==='V' ? 'btn-p' : 'btn-s';
   document.getElementById('btn-vis').style.flex = '1';
 }
+function normalizeRosterLine(s){
+  return String(s||'').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+}
+function importRivalRoster() {
+  var raw = document.getElementById('ng-rival-roster').value || '';
+  var lines = raw.split(/\r?\n/).map(normalizeRosterLine).filter(function(x){ return x; });
+  if(!lines.length){ showToast('Pega primero el roster'); return; }
+  var parsed = [], i = 0;
+  while(i < lines.length){
+    var line = lines[i];
+    var m = line.match(/^#\s*([0-9]+[A-Za-z]?)$/);
+    if(!m){ i++; continue; }
+    var dorsal = m[1];
+    var name = '';
+    if(i + 1 < lines.length){
+      var next = lines[i+1];
+      if(!/^#\s*[0-9]+[A-Za-z]?$/.test(next)) name = next;
+    }
+    if(name){
+      parsed.push({ dorsal:dorsal, name:name });
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+  if(!parsed.length){ showToast('Formato no reconocido'); return; }
+  parsed.forEach(function(p){
+    var existing = rivalPlayers.find(function(rp){ return String(rp.dorsal) === String(p.dorsal); });
+    if(existing){
+      existing.name = p.name;
+    } else {
+      rivalPlayers.push({id:'rp'+Date.now()+Math.random().toString(16).slice(2,6), name:p.name, dorsal:p.dorsal});
+    }
+  });
+  document.getElementById('ng-rival-roster').value='';
+  rRivalTags();
+  showToast('Roster rival importado');
+}
+
 function addRival() {
   var n = document.getElementById('ng-rn').value.trim();
   var d = document.getElementById('ng-rd').value.trim();
