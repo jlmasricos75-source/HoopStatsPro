@@ -801,8 +801,7 @@ function normalizeRosterLine(s){
 }
 function importRivalRoster() {
   var raw = document.getElementById('ng-rival-roster').value || '';
-  var lines = raw.split(/?
-/).map(normalizeRosterLine).filter(function(x){ return x; });
+  var lines = raw.split(/\r?\n/).map(normalizeRosterLine).filter(function(x){ return x; });
   if(!lines.length){ showToast('Pega primero el roster'); return; }
   var parsed = [], i = 0;
   while(i < lines.length){
@@ -812,7 +811,7 @@ function importRivalRoster() {
     var dorsal = m[1];
     var name = '';
     if(i + 1 < lines.length){
-      var next = lines[i+1];
+      var next = lines[i + 1];
       if(!/^#\s*[0-9]+[A-Za-z]?$/.test(next)) name = next;
     }
     if(name){
