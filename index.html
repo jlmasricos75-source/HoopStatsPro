@@ -219,11 +219,6 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
       <input class="inp" id="ng-rn" placeholder="Nombre" style="flex:1;margin:0">
       <button class="btn-p" onclick="addRival()">+</button>
     </div>
-    <textarea class="inp" id="ng-rival-roster" placeholder="#2&#10;ANTONIO BARCELO MARTIN&#10;#3&#10;EDUARD ABEL BAYARRI JAVIER" style="height:92px;resize:vertical;margin-bottom:5px"></textarea>
-    <div style="display:flex;gap:5px;margin-bottom:5px">
-      <button class="btn-s" style="flex:1" onclick="importRivalRoster()">Importar roster FBCV</button>
-      <button class="btn-s" onclick="document.getElementById('ng-rival-roster').value=''">Limpiar</button>
-    </div>
     <div id="rival-tags" style="margin-bottom:8px"></div>
     <div style="font-size:9px;color:var(--mu);margin-bottom:5px">Local / Visitante</div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
@@ -796,44 +791,6 @@ function addRival() {
   document.getElementById('ng-rn').value='';
   rRivalTags();
 }
-function normalizeRosterLine(s){
-  return String(s||'').replace(/ /g,' ').replace(/\s+/g,' ').trim();
-}
-function importRivalRoster() {
-  var raw = document.getElementById('ng-rival-roster').value || '';
-  var lines = raw.split(/\r?\n/).map(normalizeRosterLine).filter(function(x){ return x; });
-  if(!lines.length){ showToast('Pega primero el roster'); return; }
-  var parsed = [], i = 0;
-  while(i < lines.length){
-    var line = lines[i];
-    var m = line.match(/^#\s*([0-9]+[A-Za-z]?)$/);
-    if(!m){ i++; continue; }
-    var dorsal = m[1];
-    var name = '';
-    if(i + 1 < lines.length){
-      var next = lines[i + 1];
-      if(!/^#\s*[0-9]+[A-Za-z]?$/.test(next)) name = next;
-    }
-    if(name){
-      parsed.push({ dorsal:dorsal, name:name });
-      i += 2;
-    } else {
-      i += 1;
-    }
-  }
-  if(!parsed.length){ showToast('Formato no reconocido'); return; }
-  parsed.forEach(function(p){
-    var existing = rivalPlayers.find(function(rp){ return String(rp.dorsal) === String(p.dorsal); });
-    if(existing){
-      existing.name = p.name;
-    } else {
-      rivalPlayers.push({id:'rp'+Date.now()+Math.random().toString(16).slice(2,6), name:p.name, dorsal:p.dorsal});
-    }
-  });
-  document.getElementById('ng-rival-roster').value='';
-  rRivalTags();
-  showToast('Roster rival importado');
-}
 function rRivalTags() {
   document.getElementById('rival-tags').innerHTML = rivalPlayers.map(function(p,i){
     return '<span class="ptag"><span style="font-size:9px;color:var(--mu)">#'+p.dorsal+'</span><span>'+p.name+'</span><button onclick="rivalPlayers.splice('+i+',1);rRivalTags()">×</button></span>';
@@ -881,7 +838,7 @@ function rHomeRecentes() {
   try{
     var list = JSON.parse(localStorage.getItem('hs-list')||'[]');
     if(!list.length){ el.innerHTML='<div class="empty">Sin partidos guardados</div>'; return; }
-    el.innerHTML = list.slice().reverse().slice(0,5).map(function(g){
+    el.innerHTML = list.slice().sort(function(a,b){return Number(b.id)-Number(a.id);}).slice(0,5).map(function(g){
       return '<div class="hg" onclick="loadGame(\''+g.id+'\')">'
         +'<div style="flex:1"><div style="font-size:10px;color:var(--mu)">'+g.date+'</div><div style="font-size:12px;font-weight:500">vs '+g.nameB+'</div></div>'
         +'<span class="badge '+(g.scA>g.scB?'badge-g':'badge-r')+'">'+g.scA+'-'+g.scB+'</span></div>';
@@ -1573,7 +1530,86 @@ function rInfRival(){
 var tempV='tend';
 function tempTab(tab,btn){tempV=tab;document.querySelectorAll('#v-temp .vt').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');['tend','jugadores','records'].forEach(function(t){document.getElementById('temp-'+t).style.display=t===tab?'block':'none';});rTemp();}
 function rTemp(){if(tempV==='tend')rTempTend();else if(tempV==='jugadores')rTempJug();else rTempRec();}
-function getAllGames(){try{var l=JSON.parse(localStorage.getItem('hs-list')||'[]'),gs=[];l.forEach(function(g){try{var d=JSON.parse(localStorage.getItem('hs-game:'+g.id));if(d)gs.push(d);}catch(e){}});return gs;}catch(e){return[];}}
+var HS_NS=((location.hostname||'local')+(location.pathname||'/')).replace(/[^a-zA-Z0-9_-]+/g,'_');
+var HS_ROOT='histories/'+HS_NS;
+var HS_SYNC_READY=false;
+var HS_SYNC_STARTED=false;
+function hsGamePath(id){ return HS_ROOT+'/games/'+id; }
+function hsListPath(){ return HS_ROOT+'/list'; }
+function hsMirrorGame(d){
+  try{
+    localStorage.setItem('hs-game:'+d.id,JSON.stringify(d));
+    var list=JSON.parse(localStorage.getItem('hs-list')||'[]');
+    var s={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB};
+    var i=list.findIndex(function(g){return String(g.id)===String(d.id);});
+    if(i>=0) list[i]=s; else list.push(s);
+    localStorage.setItem('hs-list',JSON.stringify(list));
+  }catch(e){}
+}
+function hsMirrorDelete(id){
+  try{
+    localStorage.removeItem('hs-game:'+id);
+    var list=JSON.parse(localStorage.getItem('hs-list')||'[]').filter(function(g){return String(g.id)!==String(id);});
+    localStorage.setItem('hs-list',JSON.stringify(list));
+  }catch(e){}
+}
+function hsReadLocalGames(){
+  try{
+    var l=JSON.parse(localStorage.getItem('hs-list')||'[]'),gs=[];
+    l.forEach(function(g){
+      try{ var d=JSON.parse(localStorage.getItem('hs-game:'+g.id)); if(d) gs.push(d); }catch(e){}
+    });
+    return gs;
+  }catch(e){ return []; }
+}
+function hsRefreshViews(){
+  if(document.getElementById('home-rec-list')) rHomeRecentes();
+  if(document.getElementById('hist-list')) rHistorial();
+}
+function hsFetchRemote(cb){
+  if(!db){ cb&&cb([]); return; }
+  db.ref(hsListPath()).once('value').then(function(snap){
+    var list=snap.val()||{};
+    var ids=Object.keys(list);
+    if(!ids.length){ cb&&cb([]); return; }
+    var pending=ids.length, games=[];
+    ids.forEach(function(id){
+      db.ref(hsGamePath(id)).once('value').then(function(gs){ var d=gs.val(); if(d) games.push(d); }).catch(function(){}).finally(function(){ pending--; if(!pending) cb&&cb(games); });
+    });
+  }).catch(function(){ cb&&cb([]); });
+}
+function hsPushRemoteGame(d, done){
+  if(!db){ done&&done(false); return; }
+  var summary={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB};
+  Promise.all([
+    db.ref(hsGamePath(d.id)).set(d),
+    db.ref(hsListPath()+'/'+d.id).set(summary)
+  ]).then(function(){ done&&done(true); }).catch(function(){ done&&done(false); });
+}
+function hsDeleteRemoteGame(id, done){
+  if(!db){ done&&done(false); return; }
+  Promise.all([
+    db.ref(hsGamePath(id)).remove(),
+    db.ref(hsListPath()+'/'+id).remove()
+  ]).then(function(){ done&&done(true); }).catch(function(){ done&&done(false); });
+}
+function startHistorySync(){
+  if(HS_SYNC_STARTED) return;
+  HS_SYNC_STARTED=true;
+  var localGames=hsReadLocalGames();
+  hsFetchRemote(function(remoteGames){
+    var map={};
+    remoteGames.forEach(function(g){ if(g&&g.id!=null) map[String(g.id)]=g; });
+    localGames.forEach(function(g){ if(g&&g.id!=null && !map[String(g.id)]) map[String(g.id)]=g; });
+    var merged=Object.keys(map).map(function(k){ return map[k]; });
+    merged.forEach(hsMirrorGame);
+    var uploads=localGames.filter(function(g){ return g&&g.id!=null && !remoteGames.some(function(r){ return String(r.id)===String(g.id); }); });
+    var pending=uploads.length;
+    if(!pending){ HS_SYNC_READY=true; hsRefreshViews(); return; }
+    uploads.forEach(function(g){ hsPushRemoteGame(g, function(){ pending--; if(!pending){ HS_SYNC_READY=true; hsRefreshViews(); } }); });
+  });
+}
+function getAllGames(){ return hsReadLocalGames(); }
 function rTempTend(){
   var games=getAllGames(), el=document.getElementById('temp-tend');
   if(!games.length){el.innerHTML='<div class="card"><div class="empty">Sin partidos guardados</div></div>';return;}
@@ -1651,7 +1687,7 @@ function rHistorial(){
   try{
     var list=JSON.parse(localStorage.getItem('hs-list')||'[]');
     if(!list.length){el.innerHTML='<div class="empty">Sin partidos guardados</div>';return;}
-    el.innerHTML=list.slice().reverse().map(function(g){
+    el.innerHTML=list.slice().sort(function(a,b){return Number(b.id)-Number(a.id);}).map(function(g){
       return '<div class="hg" onclick="loadGame(\''+g.id+'\')">'
         +'<div style="flex:1"><div style="font-size:10px;color:var(--mu)">'+g.date+' — '+g.nameA+'</div><div style="font-size:12px;font-weight:500">vs '+g.nameB+'</div></div>'
         +'<span class="badge '+(g.scA>g.scB?'badge-g':'badge-r')+'">'+g.scA+' — '+g.scB+'</span>'
@@ -1661,34 +1697,49 @@ function rHistorial(){
 }
 function saveGame(){
   var d={id:S.game.id||Date.now(),date:S.game.date,nameA:S.teams.A.name,nameB:S.teams.B.name,scA:parseInt(document.getElementById('scA').textContent||'0'),scB:parseInt(document.getElementById('scB').textContent||'0'),teams:JSON.parse(JSON.stringify(S.teams)),actions:S.actions,q:S.q,game:S.game};
-  try{
-    localStorage.setItem('hs-game:'+d.id,JSON.stringify(d));
-    var list=JSON.parse(localStorage.getItem('hs-list')||'[]');
-    var s={id:d.id,date:d.date,nameA:d.nameA,nameB:d.nameB,scA:d.scA,scB:d.scB};
-    var i=list.findIndex(function(g){return g.id===d.id;});
-    if(i>=0)list[i]=s;else list.push(s);
-    localStorage.setItem('hs-list',JSON.stringify(list));
+  try{ hsMirrorGame(d); }catch(e){}
+  if(db){
+    hsPushRemoteGame(d,function(ok){ showToast(ok?'Guardado ✓':'Guardado local ✓'); hsRefreshViews(); });
+  }else{
     showToast('Guardado ✓');
-  }catch(e){showToast('Error al guardar');}
+    hsRefreshViews();
+  }
+}
+function hsApplyLoadedGame(d){
+  if(!d) throw new Error('no-data');
+  S.teams=d.teams; S.actions=d.actions||[]; S.q=d.q||1;
+  if(d.game)S.game=d.game;
+  document.getElementById('scA').textContent=d.scA||0;
+  document.getElementById('scB').textContent=d.scB||0;
+  document.getElementById('snA').textContent=d.nameA||S.teams.A.name;
+  document.getElementById('snB').textContent=d.nameB||S.teams.B.name;
+  document.getElementById('match-meta').textContent=(d.date||'')+' · vs '+(d.nameB||S.teams.B.name);
+  updateQ(); setTeam('A'); rLog(); updateBonus();
+  showToast('Cargado: '+(d.nameA||'Equipo')+' vs '+(d.nameB||'Rival'));
+  sv('live',document.querySelectorAll('.nb')[1]);
 }
 function loadGame(id){
   try{
     var d=JSON.parse(localStorage.getItem('hs-game:'+id));
-    S.teams=d.teams; S.actions=d.actions; S.q=d.q||1;
-    if(d.game)S.game=d.game;
-    document.getElementById('scA').textContent=d.scA;
-    document.getElementById('scB').textContent=d.scB;
-    document.getElementById('snA').textContent=d.nameA;
-    document.getElementById('snB').textContent=d.nameB;
-    document.getElementById('match-meta').textContent=d.date+' · vs '+d.nameB;
-    updateQ(); setTeam('A'); rLog(); updateBonus();
-    showToast('Cargado: '+d.nameA+' vs '+d.nameB);
-    sv('live',document.querySelectorAll('.nb')[1]);
-  }catch(e){showToast('Error al cargar');}
+    if(d){ hsApplyLoadedGame(d); return; }
+  }catch(e){}
+  if(db){
+    db.ref(hsGamePath(id)).once('value').then(function(snap){
+      var d=snap.val();
+      if(!d){ showToast('Error al cargar'); return; }
+      hsMirrorGame(d);
+      hsApplyLoadedGame(d);
+    }).catch(function(){ showToast('Error al cargar'); });
+  }else{
+    showToast('Error al cargar');
+  }
 }
 function delG(e,id){
   e.stopPropagation();
-  try{localStorage.removeItem('hs-game:'+id);var list=JSON.parse(localStorage.getItem('hs-list')||'[]');localStorage.setItem('hs-list',JSON.stringify(list.filter(function(g){return g.id!==id;})));rHistorial();showToast('Eliminado');}catch(e2){}
+  try{ hsMirrorDelete(id); }catch(e2){}
+  rHistorial(); rHomeRecentes();
+  if(db){ hsDeleteRemoteGame(id,function(ok){ showToast(ok?'Eliminado':'Eliminado local'); hsRefreshViews(); }); }
+  else showToast('Eliminado');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1810,6 +1861,7 @@ function showToast(msg){var t=document.getElementById('toast');t.textContent=msg
   try{var raw=localStorage.getItem('hs-myteams');if(raw){var d=JSON.parse(raw);if(d.A)S.myTeams.A=d.A;if(d.B)S.myTeams.B=d.B;}}catch(e){}
   var saved=localStorage.getItem('hs-session');
   if(saved){sessionId=saved;if(db)listenSession();}else{startSession();}
+  startHistorySync();
   initHome();
   document.getElementById('snA').textContent=S.teams.A.name;
   document.getElementById('snB').textContent=S.teams.B.name;
