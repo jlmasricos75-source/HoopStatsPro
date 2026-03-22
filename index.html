@@ -1,725 +1,741 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="HoopStat PRO">
-<meta name="theme-color" content="#0B1220">
-<title>HoopStat PRO</title>
-<style>
-:root {
-  --bg: #0B1220;
-  --card: #1e293b;
-  --text: #e2e8f0;
-  --accent: #22c55e;
-  --danger: #ef4444;
-  --orange: #f97316;
-  --gold: #f59e0b;
-  --purple: #8b5cf6;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui;
-  background: var(--bg);
-  color: var(--text);
-  padding: 10px;
-  min-height: 100vh;
-  overflow-x: hidden;
-  touch-action: manipulation;
-}
-
-/* iPad optimizations */
-@media (max-width: 1024px) {
-  .court-player {
-    width: 100px !important;
-    height: 100px !important;
-    font-size: 50px !important;
-  }
-  .video-controls-left .btn, .video-controls-right .btn {
-    width: 70px !important;
-    height: 70px !important;
-    font-size: 18px !important;
-    padding: 0 !important;
-  }
-}
-
-/* Navegación principal */
-.nav {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
-
-.nav-btn {
-  flex: 0 0 auto;
-  padding: 12px 20px;
-  background: var(--card);
-  color: var(--text);
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-  touch-action: manipulation;
-}
-
-.nav-btn.active {
-  background: var(--accent);
-  color: #000;
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* Contenedor principal */
-.container {
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-/* Título */
-h1 {
-  text-align: center;
-  color: var(--gold);
-  margin: 20px 0;
-  font-size: clamp(24px, 5vw, 32px);
-}
-
-/* Marcador */
-.scoreboard {
-  background: var(--card);
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 20px;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-
-.team-name {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.score-display {
-  font-size: clamp(36px, 12vw, 64px);
-  font-weight: 900;
-  color: var(--accent);
-  margin: 10px 0;
-}
-
-.period-info {
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-/* Botones principales */
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 12px;
-  margin: 20px 0;
-}
-
-.btn {
-  padding: 15px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  touch-action: manipulation;
-  min-height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-primary { background: var(--accent); color: #000; }
-.btn-primary:active { background: #16a34a; transform: scale(0.95); }
-.btn-danger { background: var(--danger); color: white; }
-.btn-danger:active { background: #dc2626; transform: scale(0.95); }
-.btn-warning { background: var(--orange); color: #000; }
-.btn-warning:active { background: #ea580c; transform: scale(0.95); }
-.btn-secondary { background: var(--purple); color: white; }
-.btn-secondary:active { background: #7c3aed; transform: scale(0.95); }
-
-/* Jugadores */
-.players-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
-  margin: 20px 0;
-}
-
-.player-card {
-  background: var(--card);
-  padding: 15px;
-  border-radius: 12px;
-  text-align: center;
-  position: relative;
-  transition: all 0.2s;
-  touch-action: manipulation;
-}
-
-.player-card.active {
-  box-shadow: 0 0 20px var(--accent);
-  border: 2px solid var(--accent);
-}
-
-.player-num {
-  font-size: clamp(24px, 6vw, 36px);
-  font-weight: 900;
-  color: var(--orange);
-  margin-bottom: 5px;
-}
-
-.player-name {
-  font-size: 12px;
-  opacity: 0.9;
-  margin-bottom: 8px;
-}
-
-.stats-line {
-  display: flex;
-  gap: 4px;
-  font-size: 11px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.stat-badge {
-  background: rgba(255,255,255,0.1);
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 10px;
-}
-
-/* Pista */
-.court-section {
-  background: var(--card);
-  padding: 20px;
-  border-radius: 16px;
-  margin: 20px 0;
-  position: relative;
-}
-
-.court-title {
-  text-align: center;
-  margin-bottom: 15px;
-  color: var(--gold);
-  font-weight: 700;
-}
-
-.court-players {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.court-player {
-  width: 130px;
-  height: 130px;
-  background: linear-gradient(135deg, var(--orange), #ea580c);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 65px;
-  font-weight: 900;
-  color: #000;
-  border: 4px solid #111;
-  box-shadow: 0 12px 30px rgba(249,115,22,0.5);
-  touch-action: manipulation;
-}
-
-/* Modo vídeo - CONTROLES A LOS LADOS */
-.video-container {
-  position: relative;
-  background: #000;
-  border-radius: 16px;
-  overflow: hidden;
-  margin: 20px 0;
-  height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.video-player {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* CONTROLES IZQUIERDA */
-.video-controls-left {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 2000;
-  pointer-events: auto;
-}
-
-/* CONTROLES DERECHA */
-.video-controls-right {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 2000;
-  pointer-events: auto;
-}
-
-/* Formularios */
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.form-group input, .form-group select {
-  width: 100%;
-  padding: 12px;
-  background: var(--card);
-  border: 1px solid #334155;
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 16px;
-}
-
-.form-group input::placeholder {
-  color: #94a3b8;
-}
-
-/* Historial */
-.history-item {
-  background: var(--card);
-  padding: 15px;
-  margin: 10px 0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.history-item:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.history-item:active {
-  transform: scale(0.98);
-}
-
-/* AI Coach */
-.ai-container {
-  background: linear-gradient(135deg, var(--purple), #7c3aed);
-  padding: 20px;
-  border-radius: 16px;
-  margin: 20px 0;
-}
-
-.ai-response {
-  background: rgba(255,255,255,0.1);
-  padding: 15px;
-  border-radius: 12px;
-  margin-top: 15px;
-  white-space: pre-wrap;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  body { padding: 5px; }
-  .action-buttons { grid-template-columns: repeat(2, 1fr); }
-  .court-player { 
-    width: 90px !important;
-    height: 90px !important;
-    font-size: 45px !important;
-  }
-}
-</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
 </head>
 <body>
-
-<div class="nav" id="main-nav">
-  <button class="nav-btn active" data-tab="inicio">Inicio</button>
-  <button class="nav-btn" data-tab="live">Live</button>
-  <button class="nav-btn" data-tab="video">Vídeo</button>
-  <button class="nav-btn" data-tab="box">Box</button>
-  <button class="nav-btn" data-tab="ai">AI</button>
-  <button class="nav-btn" data-tab="history">Historial</button>
-</div>
-
-<div class="container">
-  <!-- INICIO -->
-  <div id="inicio" class="tab-content active">
-    <h1>🏀 HoopStat PRO</h1>
-    
-    <div class="form-group">
-      <label>Mi equipo</label>
-      <select id="my-team">
-        <option>-- Selecciona tu equipo --</option>
-        <option>Junior A</option>
-        <option>Junior B</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>Rival</label>
-      <input type="text" id="rival-team" placeholder="Nombre del rival">
-    </div>
-
-    <button class="btn btn-primary" style="width:100%; padding:20px; font-size:20px;" onclick="startGame()">
-      🏀 Iniciar Partido
-    </button>
-
-    <div id="recent-games"></div>
-  </div>
-
-  <!-- LIVE -->
-  <div id="live" class="tab-content">
-    <div class="scoreboard">
-      <div class="team-name" id="team1-name">Mi Equipo</div>
-      <div class="score-display" id="team1-score">0</div>
-      <div class="period-info" id="period-info">1er Cuarto · 00:00</div>
-    </div>
-
-    <div class="scoreboard">
-      <div class="team-name" id="team2-name">Rival</div>
-      <div class="score-display" id="team2-score">0</div>
-    </div>
-
-    <div class="action-buttons">
-      <button class="btn btn-primary" ontouchstart="addPoints(2,1);return false;" onclick="addPoints(2,1)">+2 ✓</button>
-      <button class="btn btn-primary" ontouchstart="addPoints(3,1);return false;" onclick="addPoints(3,1)">+3 ✓</button>
-      <button class="btn btn-primary" ontouchstart="addPoints(1,1);return false;" onclick="addPoints(1,1)">TL</button>
-      <button class="btn btn-warning" ontouchstart="periodNext();return false;" onclick="periodNext()">▶ Q</button>
-      <button class="btn btn-danger" ontouchstart="resetGame();return false;" onclick="resetGame()">RESET</button>
-    </div>
-
-    <div class="players-grid" id="players-grid"></div>
-
-    <div class="court-section">
-      <div class="court-title">Pista</div>
-      <div class="court-players" id="court-players"></div>
-    </div>
-  </div>
-
-  <!-- VÍDEO -->
-  <div id="video" class="tab-content">
-    <h1>🎬 Modo Vídeo</h1>
-    
-    <div class="video-container">
-      <video id="video-player" class="video-player" controls></video>
-      
-      <!-- CONTROLES IZQUIERDA -->
-      <div class="video-controls-left">
-        <button class="btn btn-primary" ontouchstart="actionVideo('2pt');return false;" onclick="actionVideo('2pt')">+2✓</button>
-        <button class="btn btn-primary" ontouchstart="actionVideo('reb-of');return false;" onclick="actionVideo('reb-of')">REB.OF</button>
-        <button class="btn btn-secondary" ontouchstart="actionVideo('ast');return false;" onclick="actionVideo('ast')">AST</button>
-        <button class="btn btn-danger" ontouchstart="actionVideo('falta');return false;" onclick="actionVideo('falta')">FALTA</button>
-      </div>
-
-      <!-- CONTROLES DERECHA -->
-      <div class="video-controls-right">
-        <button class="btn btn-primary" ontouchstart="actionVideo('3pt');return false;" onclick="actionVideo('3pt')">+3✓</button>
-        <button class="btn btn-primary" ontouchstart="actionVideo('reb-def');return false;" onclick="actionVideo('reb-def')">REB.DEF</button>
-        <button class="btn btn-secondary" ontouchstart="actionVideo('robo');return false;" onclick="actionVideo('robo')">ROBO</button>
-        <button class="btn btn-danger" ontouchstart="actionVideo('perdida');return false;" onclick="actionVideo('perdida')">PÉRDIDA</button>
-      </div>
-
-      <!-- PISTA EN VÍDEO -->
-      <div class="court-players" id="video-court" style="position:absolute; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:8px; pointer-events:none;"></div>
-    </div>
-
-    <div style="text-align:center; margin-top:20px;">
-      <input type="file" id="video-upload" accept="video/*" style="display:none;" onchange="loadVideo(event)">
-      <button class="btn btn-secondary" onclick="document.getElementById('video-upload').click()">📁 Cargar vídeo</button>
-    </div>
-  </div>
-
-  <!-- BOX SCORE -->
-  <div id="box" class="tab-content">
-    <h1>📊 Box Score</h1>
-    <div id="box-score"></div>
-  </div>
-
-  <!-- AI COACH -->
-  <div id="ai" class="tab-content">
-    <h1>🤖 AI Coach</h1>
-    <div class="ai-container">
-      <button class="btn btn-primary" style="width:100%;" onclick="getAIInsight()">Analizar Partido</button>
-      <div id="ai-response" class="ai-response" style="display:none;"></div>
-    </div>
-  </div>
-
-  <!-- HISTORIAL -->
-  <div id="history" class="tab-content">
-    <h1>📋 Historial</h1>
-    <div id="history-list">Sin partidos guardados</div>
-  </div>
-</div>
-
-<script>
-const STATE = {
-  game: {
-    team1: {name: 'Mi Equipo', score: 0},
-    team2: {name: 'Rival', score: 0},
-    period: 1,
-    time: 600,
-    started: false
-  },
-  players: [
-    {id:1, num:4, name:'García', onCourt:false, pts:0, reb:0, ast:0, stl:0},
-    {id:2, num:7, name:'López', onCourt:false, pts:0, reb:0, ast:0, stl:0},
-    {id:3, num:9, name:'Martín', onCourt:false, pts:0, reb:0, ast:0, stl:0},
-    {id:4, num:12, name:'Pérez', onCourt:false, pts:0, reb:0, ast:0, stl:0},
-    {id:5, num:15, name:'Sánchez', onCourt:false, pts:0, reb:0, ast:0, stl:0}
-  ],
-  history: JSON.parse(localStorage.getItem('hoopstat_history')) || [],
-  videoTime: 0
-};
-
-// Inicializar
-document.addEventListener('DOMContentLoaded', function() {
-  setupNav();
-  loadHistory();
-  updateDisplay();
-});
-
-function setupNav() {
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('touchstart', function(e) {
-      showTab(this.dataset.tab);
-      e.preventDefault();
-    }, {passive: false});
-    btn.addEventListener('click', function(e) {
-      showTab(this.dataset.tab);
-    });
-  });
-}
-
-function showTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
-  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-}
-
-function startGame() {
-  const team1 = document.getElementById('my-team').value || 'Mi Equipo';
-  const team2 = document.getElementById('rival-team').value || 'Rival';
-  
-  STATE.game.team1.name = team1;
-  STATE.game.team2.name = team2;
-  STATE.game.started = true;
-  
-  showTab('live');
-  updateDisplay();
-}
-
-function updateDisplay() {
-  // Marcador
-  document.getElementById('team1-score').textContent = STATE.game.team1.score;
-  document.getElementById('team2-score').textContent = STATE.game.team2.score;
-  document.getElementById('team1-name').textContent = STATE.game.team1.name;
-  document.getElementById('team2-name').textContent = STATE.game.team2.name;
-  
-  const mins = Math.floor(STATE.game.time / 60);
-  const secs = (STATE.game.time % 60).toString().padStart(2, '0');
-  document.getElementById('period-info').textContent = `${STATE.game.period}er Cuarto · ${mins}:${secs}`;
-
-  // Jugadores
-  renderPlayers();
-  renderCourt();
-}
-
-function renderPlayers() {
-  let html = '';
-  STATE.players.forEach(p => {
-    const stats = `${p.pts}pt ${p.reb}r ${p.ast}a`;
-    html += `
-      <div class="player-card ${p.onCourt ? 'active' : ''}">
-        <div class="player-num">${p.num}</div>
-        <div class="player-name">${p.name}</div>
-        <div class="stats-line">
-          <span class="stat-badge">${stats}</span>
-        </div>
-        <button class="btn btn-primary" style="width:100%; margin-top:8px; font-size:14px;"
-          ontouchstart="togglePlayer(${p.id}); return false;" 
-          onclick="togglePlayer(${p.id})">
-          ${p.onCourt ? 'FUERA' : 'PISTA'}
-        </button>
-      </div>
-    `;
-  });
-  document.getElementById('players-grid').innerHTML = html;
-}
-
-function renderCourt() {
-  let html = '';
-  STATE.players.filter(p => p.onCourt).forEach(p => {
-    html += `<div class="court-player" ontouchstart="selectPlayer(${p.id});return false;" onclick="selectPlayer(${p.id})">${p.num}</div>`;
-  });
-  document.getElementById('court-players').innerHTML = html;
-  
-  // También en vídeo
-  document.getElementById('video-court').innerHTML = html;
-}
-
-function togglePlayer(id) {
-  const player = STATE.players.find(p => p.id === id);
-  player.onCourt = !player.onCourt;
-  updateDisplay();
-}
-
-function selectPlayer(id) {
-  // Acción para jugador seleccionado en pista
-  console.log('Jugador seleccionado:', id);
-}
-
-function addPoints(points, team = 1) {
-  if (team === 1) {
-    STATE.game.team1.score += points;
-    // Asignar a jugador activo
-    const activePlayer = STATE.players.find(p => p.onCourt);
-    if (activePlayer) activePlayer.pts += points;
-  } else {
-    STATE.game.team2.score += points;
-  }
-  updateDisplay();
-}
-
-function periodNext() {
-  STATE.game.period++;
-  STATE.game.time = 600;
-  if (STATE.game.period > 4) {
-    saveGame();
-    alert('¡Partido terminado!');
-    resetGame();
-  }
-  updateDisplay();
-}
-
-function resetGame() {
-  STATE.game.team1.score = 0;
-  STATE.game.team2.score = 0;
-  STATE.game.period = 1;
-  STATE.game.time = 600;
-  STATE.players.forEach(p => {
-    p.pts = 0; p.reb = 0; p.ast = 0; p.stl = 0; p.onCourt = false;
-  });
-  updateDisplay();
-}
-
-function saveGame() {
-  const game = {
-    date: new Date().toLocaleString('es-ES'),
-    team1: `${STATE.game.team1.name} ${STATE.game.team1.score}`,
-    team2: `${STATE.game.team2.name} ${STATE.game.team2.score}`,
-    players: STATE.players.map(p => ({name: p.name, num: p.num, pts: p.pts}))
-  };
-  STATE.history.unshift(game);
-  localStorage.setItem('hoopstat_history', JSON.stringify(STATE.history.slice(0, 50)));
-  loadHistory();
-}
-
-function loadHistory() {
-  const list = document.getElementById('recent-games');
-  const histList = document.getElementById('history-list');
-  
-  if (STATE.history.length === 0) {
-    list.innerHTML = '<div style="text-align:center; opacity:0.5;">Sin partidos guardados</div>';
-    histList.innerHTML = 'Sin partidos guardados';
-    return;
-  }
-  
-  let html = '<h3>Últimos partidos</h3>';
-  STATE.history.slice(0, 5).forEach(game => {
-    html += `<div class="history-item" onclick="loadGame('${game.date}')">
-      <div style="font-weight:700;">${game.date}</div>
-      <div style="font-size:20px;">${game.team1} vs ${game.team2}</div>
-    </div>`;
-  });
-  list.innerHTML = html;
-  
-  let histHtml = '';
-  STATE.history.slice(0, 10).forEach(game => {
-    histHtml += `<div class="history-item">
-      <div style="font-weight:700;">${game.date}</div>
-      <div style="font-size:20px;">${game.team1} vs ${game.team2}</div>
-    </div>`;
-  });
-  histList.innerHTML = histHtml;
-}
-
-function loadGame(date) {
-  const game = STATE.history.find(g => g.date === date);
-  if (game) {
-    // Cargar datos del partido
-    console.log('Cargando:', game);
-  }
-}
-
-// VÍDEO FUNCTIONS
-function loadVideo(event) {
-  const file = event.target.files[0];
-  const video = document.getElementById('video-player');
-  const url = URL.createObjectURL(file);
-  video.src = url;
-  video.play();
-}
-
-function actionVideo(type) {
-  console.log('Acción vídeo:', type);
-  // Registrar acción con timestamp del vídeo
-  STATE.videoTime = document.getElementById('video-player').currentTime;
-  // Aquí iría la lógica de stats por vídeo
-}
-
-function getAIInsight() {
-  document.getElementById('ai-response').style.display = 'block';
-  document.getElementById('ai-response').textContent = 
-    '🔍 Análisis AI:\n\n' +
-    `• Mejor jugador: #4 García (${STATE.players.find(p=>p.num===4)?.pts || 0} pts)\n` +
-    `• Líder rebotes: ${STATE.players.reduce((max,p)=>p.reb>max.reb?p:p,STATE.players[0]).name}\n` +
-    `• Sugerencia: Rotar quinteto - mantener a ${STATE.players[0].name} en pista`;
-}
-</script>
-
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="es"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"&gt;</p>
+<p class="p1">&lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;</p>
+<p class="p1">&lt;meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"&gt;</p>
+<p class="p1">&lt;meta name="apple-mobile-web-app-title" content="HoopStat PRO"&gt;</p>
+<p class="p1">&lt;meta name="theme-color" content="#0B1220"&gt;</p>
+<p class="p1">&lt;title&gt;HoopStat PRO&lt;/title&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1">:root {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--bg: #0B1220;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--card: #1e293b;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--text: #e2e8f0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--accent: #22c55e;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--danger: #ef4444;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--orange: #f97316;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--gold: #f59e0b;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--purple: #8b5cf6;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">* {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-sizing: border-box;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>-webkit-tap-highlight-color: transparent;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>-webkit-touch-callout: none;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>-webkit-user-select: none;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>user-select: none;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">body {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--bg);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--text);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>min-height: 100vh;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>overflow-x: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>touch-action: manipulation;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* iPad optimizations */</p>
+<p class="p1">@media (max-width: 1024px) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.court-player {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>width: 100px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>height: 100px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>font-size: 50px !important;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.video-controls-left .btn, .video-controls-right .btn {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>width: 70px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>height: 70px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>font-size: 18px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>padding: 0 !important;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Navegación principal */</p>
+<p class="p1">.nav {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>overflow-x: auto;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding-bottom: 10px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.nav-btn {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex: 0 0 auto;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 12px 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--card);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--text);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: none;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 600;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>white-space: nowrap;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>touch-action: manipulation;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.nav-btn.active {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--accent);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #000;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.tab-content {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: none;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.tab-content.active {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: block;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Contenedor principal */</p>
+<p class="p1">.container {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>max-width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 0 auto;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Título */</p>
+<p class="p1">h1 {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--gold);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 20px 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: clamp(24px, 5vw, 32px);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Marcador */</p>
+<p class="p1">.scoreboard {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--card);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-shadow: 0 8px 32px rgba(0,0,0,0.3);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.team-name {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 18px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 700;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text-transform: uppercase;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>letter-spacing: 1px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.score-display {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: clamp(36px, 12vw, 64px);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 900;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--accent);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 10px 0;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.period-info {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>opacity: 0.8;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Botones principales */</p>
+<p class="p1">.action-buttons {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: grid;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 20px 0;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.btn {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: none;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 700;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>touch-action: manipulation;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>min-height: 50px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>justify-content: center;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.btn-primary { background: var(--accent); color: #000; }</p>
+<p class="p1">.btn-primary:active { background: #16a34a; transform: scale(0.95); }</p>
+<p class="p1">.btn-danger { background: var(--danger); color: white; }</p>
+<p class="p1">.btn-danger:active { background: #dc2626; transform: scale(0.95); }</p>
+<p class="p1">.btn-warning { background: var(--orange); color: #000; }</p>
+<p class="p1">.btn-warning:active { background: #ea580c; transform: scale(0.95); }</p>
+<p class="p1">.btn-secondary { background: var(--purple); color: white; }</p>
+<p class="p1">.btn-secondary:active { background: #7c3aed; transform: scale(0.95); }</p>
+<p class="p2"><br></p>
+<p class="p1">/* Jugadores */</p>
+<p class="p1">.players-grid {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: grid;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 20px 0;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.player-card {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--card);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>touch-action: manipulation;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.player-card.active {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-shadow: 0 0 20px var(--accent);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 2px solid var(--accent);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.player-num {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: clamp(24px, 6vw, 36px);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 900;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--orange);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 5px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.player-name {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>opacity: 0.9;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 8px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.stats-line {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 4px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 11px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-wrap: wrap;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.stat-badge {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: rgba(255,255,255,0.1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 2px 6px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 6px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 10px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Pista */</p>
+<p class="p1">.court-section {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--card);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 20px 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>position: relative;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.court-title {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--gold);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 700;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.court-players {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-wrap: wrap;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.court-player {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>width: 130px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>height: 130px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: linear-gradient(135deg, var(--orange), #ea580c);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 65px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 900;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #000;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 4px solid #111;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-shadow: 0 12px 30px rgba(249,115,22,0.5);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>touch-action: manipulation;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Modo vídeo - CONTROLES A LOS LADOS */</p>
+<p class="p1">.video-container {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #000;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>overflow: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 20px 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>height: 400px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>justify-content: center;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.video-player {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>height: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>object-fit: cover;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* CONTROLES IZQUIERDA */</p>
+<p class="p1">.video-controls-left {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>left: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>top: 50%;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transform: translateY(-50%);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>z-index: 2000;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>pointer-events: auto;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* CONTROLES DERECHA */</p>
+<p class="p1">.video-controls-right {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>right: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>top: 50%;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transform: translateY(-50%);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>z-index: 2000;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>pointer-events: auto;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Formularios */</p>
+<p class="p1">.form-group {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 15px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.form-group label {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: block;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: 600;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.form-group input, .form-group select {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--card);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 1px solid #334155;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: var(--text);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 16px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.form-group input::placeholder {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #94a3b8;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Historial */</p>
+<p class="p1">.history-item {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: var(--card);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 10px 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transition: all 0.2s;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.history-item:hover {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-shadow: 0 4px 12px rgba(0,0,0,0.3);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.history-item:active {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>transform: scale(0.98);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* AI Coach */</p>
+<p class="p1">.ai-container {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: linear-gradient(135deg, var(--purple), #7c3aed);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 20px 0;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.ai-response {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: rgba(255,255,255,0.1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>white-space: pre-wrap;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* Responsive */</p>
+<p class="p1">@media (max-width: 768px) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>body { padding: 5px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.action-buttons { grid-template-columns: repeat(2, 1fr); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.court-player {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>width: 90px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>height: 90px !important;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>font-size: 45px !important;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="nav" id="main-nav"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="nav-btn active" data-tab="inicio"&gt;Inicio&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="nav-btn" data-tab="live"&gt;Live&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="nav-btn" data-tab="video"&gt;Vídeo&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="nav-btn" data-tab="box"&gt;Box&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="nav-btn" data-tab="ai"&gt;AI&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="nav-btn" data-tab="history"&gt;Historial&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- INICIO --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="inicio" class="tab-content active"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;🏀 HoopStat PRO&lt;/h1&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;Mi equipo&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;select id="my-team"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;option&gt;-- Selecciona tu equipo --&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;option&gt;Junior A&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;option&gt;Junior B&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;Rival&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;input type="text" id="rival-team" placeholder="Nombre del rival"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button class="btn btn-primary" style="width:100%; padding:20px; font-size:20px;" onclick="startGame()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>🏀 Iniciar Partido</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="recent-games"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- LIVE --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="live" class="tab-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="scoreboard"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="team-name" id="team1-name"&gt;Mi Equipo&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="score-display" id="team1-score"&gt;0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="period-info" id="period-info"&gt;1er Cuarto · 00:00&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="scoreboard"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="team-name" id="team2-name"&gt;Rival&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="score-display" id="team2-score"&gt;0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="action-buttons"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-primary" ontouchstart="addPoints(2,1);return false;" onclick="addPoints(2,1)"&gt;+2 ✓&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-primary" ontouchstart="addPoints(3,1);return false;" onclick="addPoints(3,1)"&gt;+3 ✓&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-primary" ontouchstart="addPoints(1,1);return false;" onclick="addPoints(1,1)"&gt;TL&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-warning" ontouchstart="periodNext();return false;" onclick="periodNext()"&gt;▶ Q&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-danger" ontouchstart="resetGame();return false;" onclick="resetGame()"&gt;RESET&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="players-grid" id="players-grid"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="court-section"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="court-title"&gt;Pista&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="court-players" id="court-players"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- VÍDEO --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="video" class="tab-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;🎬 Modo Vídeo&lt;/h1&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="video-container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;video id="video-player" class="video-player" controls&gt;&lt;/video&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- CONTROLES IZQUIERDA --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="video-controls-left"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-primary" ontouchstart="actionVideo('2pt');return false;" onclick="actionVideo('2pt')"&gt;+2✓&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-primary" ontouchstart="actionVideo('reb-of');return false;" onclick="actionVideo('reb-of')"&gt;REB.OF&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-secondary" ontouchstart="actionVideo('ast');return false;" onclick="actionVideo('ast')"&gt;AST&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-danger" ontouchstart="actionVideo('falta');return false;" onclick="actionVideo('falta')"&gt;FALTA&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- CONTROLES DERECHA --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="video-controls-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-primary" ontouchstart="actionVideo('3pt');return false;" onclick="actionVideo('3pt')"&gt;+3✓&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-primary" ontouchstart="actionVideo('reb-def');return false;" onclick="actionVideo('reb-def')"&gt;REB.DEF&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-secondary" ontouchstart="actionVideo('robo');return false;" onclick="actionVideo('robo')"&gt;ROBO&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-danger" ontouchstart="actionVideo('perdida');return false;" onclick="actionVideo('perdida')"&gt;PÉRDIDA&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- PISTA EN VÍDEO --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="court-players" id="video-court" style="position:absolute; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:8px; pointer-events:none;"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="text-align:center; margin-top:20px;"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;input type="file" id="video-upload" accept="video/*" style="display:none;" onchange="loadVideo(event)"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-secondary" onclick="document.getElementById('video-upload').click()"&gt;📁 Cargar vídeo&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- BOX SCORE --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="box" class="tab-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;📊 Box Score&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="box-score"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- AI COACH --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="ai" class="tab-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;🤖 AI Coach&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="ai-container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn btn-primary" style="width:100%;" onclick="getAIInsight()"&gt;Analizar Partido&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="ai-response" class="ai-response" style="display:none;"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- HISTORIAL --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="history" class="tab-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;📋 Historial&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="history-list"&gt;Sin partidos guardados&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">const STATE = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>game: {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>team1: {name: 'Mi Equipo', score: 0},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>team2: {name: 'Rival', score: 0},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>period: 1,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>time: 600,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>started: false</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>players: [</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{id:1, num:4, name:'García', onCourt:false, pts:0, reb:0, ast:0, stl:0},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{id:2, num:7, name:'López', onCourt:false, pts:0, reb:0, ast:0, stl:0},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{id:3, num:9, name:'Martín', onCourt:false, pts:0, reb:0, ast:0, stl:0},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{id:4, num:12, name:'Pérez', onCourt:false, pts:0, reb:0, ast:0, stl:0},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{id:5, num:15, name:'Sánchez', onCourt:false, pts:0, reb:0, ast:0, stl:0}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>],</p>
+<p class="p1"><span class="Apple-converted-space">  </span>history: JSON.parse(localStorage.getItem('hoopstat_history')) || [],</p>
+<p class="p1"><span class="Apple-converted-space">  </span>videoTime: 0</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">// Inicializar</p>
+<p class="p1">document.addEventListener('DOMContentLoaded', function() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>setupNav();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>loadHistory();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>updateDisplay();</p>
+<p class="p1">});</p>
+<p class="p2"><br></p>
+<p class="p1">function setupNav() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll('.nav-btn').forEach(btn =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.addEventListener('touchstart', function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>showTab(this.dataset.tab);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, {passive: false});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.addEventListener('click', function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>showTab(this.dataset.tab);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function showTab(tab) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll('.tab-content').forEach(c =&gt; c.classList.remove('active'));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll('.nav-btn').forEach(b =&gt; b.classList.remove('active'));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById(tab).classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.querySelector(`[data-tab="${tab}"]`).classList.add('active');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function startGame() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const team1 = document.getElementById('my-team').value || 'Mi Equipo';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const team2 = document.getElementById('rival-team').value || 'Rival';</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.team1.name = team1;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.team2.name = team2;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.started = true;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>showTab('live');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>updateDisplay();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function updateDisplay() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Marcador</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('team1-score').textContent = STATE.game.team1.score;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('team2-score').textContent = STATE.game.team2.score;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('team1-name').textContent = STATE.game.team1.name;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('team2-name').textContent = STATE.game.team2.name;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const mins = Math.floor(STATE.game.time / 60);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const secs = (STATE.game.time % 60).toString().padStart(2, '0');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('period-info').textContent = `${STATE.game.period}er Cuarto · ${mins}:${secs}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Jugadores</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderPlayers();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderCourt();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function renderPlayers() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let html = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.players.forEach(p =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const stats = `${p.pts}pt ${p.reb}r ${p.ast}a`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>html += `</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="player-card ${p.onCourt ? 'active' : ''}"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="player-num"&gt;${p.num}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="player-name"&gt;${p.name}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="stats-line"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span class="stat-badge"&gt;${stats}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-primary" style="width:100%; margin-top:8px; font-size:14px;"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ontouchstart="togglePlayer(${p.id}); return false;"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>onclick="togglePlayer(${p.id})"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>${p.onCourt ? 'FUERA' : 'PISTA'}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('players-grid').innerHTML = html;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function renderCourt() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let html = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.players.filter(p =&gt; p.onCourt).forEach(p =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>html += `&lt;div class="court-player" ontouchstart="selectPlayer(${p.id});return false;" onclick="selectPlayer(${p.id})"&gt;${p.num}&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('court-players').innerHTML = html;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// También en vídeo</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('video-court').innerHTML = html;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function togglePlayer(id) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const player = STATE.players.find(p =&gt; p.id === id);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>player.onCourt = !player.onCourt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>updateDisplay();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function selectPlayer(id) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Acción para jugador seleccionado en pista</p>
+<p class="p1"><span class="Apple-converted-space">  </span>console.log('Jugador seleccionado:', id);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function addPoints(points, team = 1) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (team === 1) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>STATE.game.team1.score += points;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Asignar a jugador activo</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const activePlayer = STATE.players.find(p =&gt; p.onCourt);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (activePlayer) activePlayer.pts += points;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>STATE.game.team2.score += points;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>updateDisplay();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function periodNext() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.period++;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.time = 600;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (STATE.game.period &gt; 4) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>saveGame();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>alert('¡Partido terminado!');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>resetGame();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>updateDisplay();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function resetGame() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.team1.score = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.team2.score = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.period = 1;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.game.time = 600;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.players.forEach(p =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>p.pts = 0; p.reb = 0; p.ast = 0; p.stl = 0; p.onCourt = false;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>updateDisplay();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function saveGame() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const game = {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>date: new Date().toLocaleString('es-ES'),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>team1: `${STATE.game.team1.name} ${STATE.game.team1.score}`,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>team2: `${STATE.game.team2.name} ${STATE.game.team2.score}`,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>players: STATE.players.map(p =&gt; ({name: p.name, num: p.num, pts: p.pts}))</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.history.unshift(game);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>localStorage.setItem('hoopstat_history', JSON.stringify(STATE.history.slice(0, 50)));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>loadHistory();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function loadHistory() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const list = document.getElementById('recent-games');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const histList = document.getElementById('history-list');</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (STATE.history.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>list.innerHTML = '&lt;div style="text-align:center; opacity:0.5;"&gt;Sin partidos guardados&lt;/div&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>histList.innerHTML = 'Sin partidos guardados';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let html = '&lt;h3&gt;Últimos partidos&lt;/h3&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.history.slice(0, 5).forEach(game =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>html += `&lt;div class="history-item" onclick="loadGame('${game.date}')"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="font-weight:700;"&gt;${game.date}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="font-size:20px;"&gt;${game.team1} vs ${game.team2}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>list.innerHTML = html;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let histHtml = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.history.slice(0, 10).forEach(game =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>histHtml += `&lt;div class="history-item"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="font-weight:700;"&gt;${game.date}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="font-size:20px;"&gt;${game.team1} vs ${game.team2}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>histList.innerHTML = histHtml;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function loadGame(date) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const game = STATE.history.find(g =&gt; g.date === date);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (game) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Cargar datos del partido</p>
+<p class="p1"><span class="Apple-converted-space">    </span>console.log('Cargando:', game);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// VÍDEO FUNCTIONS</p>
+<p class="p1">function loadVideo(event) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const file = event.target.files[0];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const video = document.getElementById('video-player');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const url = URL.createObjectURL(file);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>video.src = url;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>video.play();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function actionVideo(type) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>console.log('Acción vídeo:', type);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Registrar acción con timestamp del vídeo</p>
+<p class="p1"><span class="Apple-converted-space">  </span>STATE.videoTime = document.getElementById('video-player').currentTime;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Aquí iría la lógica de stats por vídeo</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function getAIInsight() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ai-response').style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ai-response').textContent =<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>'🔍 Análisis AI:\n\n' +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`• Mejor jugador: #4 García (${STATE.players.find(p=&gt;p.num===4)?.pts || 0} pts)\n` +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`• Líder rebotes: ${STATE.players.reduce((max,p)=&gt;p.reb&gt;max.reb?p:p,STATE.players[0]).name}\n` +</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`• Sugerencia: Rotar quinteto - mantener a ${STATE.players[0].name} en pista`;</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
 </body>
 </html>
