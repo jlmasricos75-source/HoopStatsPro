@@ -1761,12 +1761,13 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
 
 
 
-/* AJUSTE LIVE: redistribuir columnas para que la pista ocupe ~60–65% del ancho en iPad horizontal */
-/* AJUSTE LIVE: compactar franja superior (marcador + cabecera pista) para reducir espacio antes de la pista */
-/* AJUSTE LIVE: optimizar ancho y alto reales de la pista en iPad horizontal */
+/* LIVE iPad: pasar a 2 columnas (acciones + pista) */
+/* LIVE iPad: mover jugadores/quinteto abajo */
+/* LIVE iPad: compactar franja superior y optimizar pista */
 @media (min-width:980px){
   #v-live.live-pro.on{
-    grid-template-columns:220px minmax(0, 2.6fr) 120px;
+    grid-template-columns:220px minmax(0,1fr);
+    grid-template-rows:auto auto auto auto;
     gap:6px;
     align-content:start;
     align-items:start;
@@ -1774,45 +1775,77 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
   }
 
   #v-live .live-score{
+    grid-column:1 / -1;
+    grid-row:1;
     margin-bottom:0 !important;
   }
-
   #v-live > .card:first-child{
-    margin-bottom:4px !important;
-    padding-top:6px;
-    padding-bottom:6px;
+    margin-bottom:2px !important;
+    padding-top:4px;
+    padding-bottom:4px;
   }
   #v-live > .card:first-child .sr{margin-bottom:1px;}
   #v-live > .card:first-child #qinfo{margin-bottom:2px !important;}
-  #v-live > .card:first-child .bonus-bar{margin-top:1px; margin-bottom:2px;}
+  #v-live > .card:first-child .bonus-bar{margin-top:1px;}
   #v-live > .card:first-child #bonus-alert{margin-top:2px;}
 
+  #v-live .live-actions-card{
+    grid-column:1;
+    grid-row:2 / span 2;
+    margin-bottom:0;
+  }
+
   #v-live .live-court-card{
+    grid-column:2;
+    grid-row:2;
     margin-top:0;
     margin-bottom:0;
-    padding:4px 8px 8px;
-    overflow:hidden;
+    padding:3px 8px 6px;
+  }
+
+  #v-live .live-detail{
+    grid-column:2;
+    grid-row:3;
+    margin-bottom:0;
+  }
+
+  #v-live .live-log-card{
+    grid-column:1;
+    grid-row:3;
+    margin-bottom:0;
+  }
+
+  #v-live .live-players-card{
+    grid-column:1 / -1;
+    grid-row:4;
+    margin-top:0;
+    margin-bottom:0;
   }
 
   #v-live .court-topbar-pro{
     gap:6px;
     margin-bottom:4px;
-    grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr) auto;
+    grid-template-columns:minmax(0,1.18fr) minmax(0,.9fr) auto;
   }
-
   #v-live .court-scoreband{
     min-height:52px;
-    padding:6px 10px;
+    padding:4px 8px;
     gap:6px;
   }
-
-  #v-live .court-midline{margin-bottom:2px;}
-  #v-live .court-qinfo{font-size:11px; line-height:1.1;}
   #v-live .court-teamscore{font-size:28px;}
+  #v-live .court-midline{margin-bottom:2px;}
+  #v-live .court-qinfo{font-size:11px;line-height:1.1;}
+  #v-live .court-chip{
+    padding:4px 8px;
+    font-size:9px;
+    gap:5px;
+  }
   #v-live .court-actions-top{gap:4px;}
-  #v-live .court-chip{padding:5px 9px;}
+  #v-live .court-actions-top .btn-s{
+    padding:4px 8px;
+    font-size:9px;
+  }
 
-  /* Se prioriza que la pista gane protagonismo claro sin provocar scroll excesivo en acciones y jugadores. */
   #v-live #cv-live-wrap{
     width:100%;
     max-width:none;
@@ -1824,11 +1857,6 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
     height:auto;
     max-height:64vh;
   }
-
-  #v-live .live-actions-card{grid-column:1;grid-row:2 / span 2;}
-  #v-live .live-court-card{grid-column:2;grid-row:2;}
-  #v-live .live-players-card{grid-column:3;grid-row:2;}
-  #v-live .live-detail{grid-column:2 / 4;grid-row:3;}
 }
 
 </style>
