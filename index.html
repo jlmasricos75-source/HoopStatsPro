@@ -1675,68 +1675,90 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
 /* SYNC STATUS */
 .sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;}
 
-/* ─────────────────────────────────────────────────────────────────
-   AJUSTE: iPad landscape — liberar espacio para jugadores y botones
-   Aplica a cualquier pantalla ≥980px en horizontal (iPad todas las
-   generaciones en landscape). Sobreescribe los bloques anteriores.
-───────────────────────────────────────────────────────────────── */
-@media (min-width:980px) and (orientation:landscape){
-
-  /* 1. Court SVG más corto: deja ver jugadores sin scroll */
-  #v-live #cv-live{
-    max-height:40vh;
-  }
-
-  /* 2. Court card: eliminar padding superior sobrante */
-  #v-live .live-court-card{
-    padding:0px 8px 4px;
-    margin-top:-10px;
-  }
-
-  /* 3. Topbar del court: menos espacio bajo el marcador */
-  #v-live .court-topbar-pro{
-    margin-bottom:3px;
-  }
-
-  /* 4. Scoreband más compacta verticalmente */
-  #v-live .court-scoreband{
-    min-height:48px;
-    padding:4px 8px;
-  }
-
-  /* 5. Marcador más pequeño para que encaje en la banda compacta */
-  #v-live .court-teamscore{
-    font-size:24px;
-  }
-
-  /* 6. Grid: columna de jugadores más ancha, acciones algo más estrecha */
-  #v-live.live-pro.on{
-    grid-template-columns:190px minmax(0,1fr) 210px;
-    gap:6px;
-  }
-
-  /* 7. Tarjetas de jugador más compactas para que quepan más sin scroll */
-  #v-live .live-players-card .pc{
-    min-height:60px;
-    padding:6px 8px 6px 10px;
-  }
-
-  /* 8. Sub-pill (dorsal) ligeramente más pequeña */
-  #v-live .live-players-card .sub-pill{
-    min-width:36px;
-    height:36px;
-    font-size:18px;
-  }
-
-  /* 9. Nombre de jugador ligeramente más pequeño */
-  #v-live .live-players-card .pc-n{
-    font-size:11px;
-  }
-}
-/* ─────────────────────────────────────────────────────────────── */
-
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+
+/* AJUSTE: compactar franja superior (marcador + cabecera pista) para reducir espacio antes de la pista */
+/* AJUSTE: redimensionar grid y altura de pista para que la pista sea el bloque dominante en iPad */
+@media (min-width:980px){
+  #v-live.live-pro.on{
+    grid-template-columns:220px minmax(0, 2.45fr) 136px;
+    gap:6px;
+    padding-top:0;
+    align-items:start;
+  }
+
+  /* Se prioriza que la pista gane protagonismo sin ocultar acciones ni jugadores. */
+  #v-live .live-score{
+    margin-bottom:0 !important;
+  }
+  #v-live > .card:first-child{
+    margin-bottom:0 !important;
+    padding-top:6px;
+    padding-bottom:6px;
+  }
+  #v-live > .card:first-child .sr{margin-bottom:1px;}
+  #v-live > .card:first-child #qinfo{margin-bottom:2px !important;}
+  #v-live > .card:first-child .bonus-bar{margin-top:1px;}
+  #v-live > .card:first-child #bonus-alert{margin-top:2px;}
+
+  #v-live .live-court-card{
+    margin-top:-12px;
+    padding:2px 8px 6px;
+  }
+
+  #v-live .court-topbar-pro{
+    gap:6px;
+    margin-bottom:4px;
+    grid-template-columns:minmax(0,1.28fr) minmax(0,.92fr) auto;
+  }
+  #v-live .court-scoreband{
+    min-height:52px;
+    padding:4px 8px;
+    gap:6px;
+  }
+  #v-live .court-midline{
+    margin-bottom:2px;
+  }
+  #v-live .court-qinfo{
+    font-size:11px;
+    line-height:1.1;
+  }
+  #v-live .court-teamscore{
+    font-size:28px;
+  }
+  #v-live .court-actions-top{
+    gap:4px;
+  }
+  #v-live .court-chip{
+    padding:5px 9px;
+  }
+
+  #v-live #cv-live-wrap{
+    margin:0;
+  }
+  #v-live #cv-live{
+    width:100%;
+    aspect-ratio:120 / 62;
+    height:auto;
+    max-height:62vh;
+  }
+
+  #v-live .live-actions-card{
+    grid-column:1;
+    grid-row:2 / span 2;
+  }
+  #v-live .live-players-card{
+    grid-column:3;
+    grid-row:2;
+  }
+  #v-live .live-detail{
+    grid-column:2 / 4;
+    grid-row:3;
+  }
+}
+
 </style>
 </head>
 <body>
